@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/coordinator_layout"
+    tools:context=".TVodActivity">
+
+    <com.google.android.exoplayer2.ui.SimpleExoPlayerView
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:id="@+id/player_view_tvod"
+        app:resize_mode="fit"
+        app:hide_on_touch="true"
+        app:show_timeout="5000"
+        app:rewind_increment="10000"
+        app:fastforward_increment="10000"
+        app:use_controller="true"
+        android:background="@android:color/background_dark"
+        app:player_layout_id="@layout/exo_simple_player_view"
+        app:controller_layout_id="@layout/custom_controller">
+
+        <ProgressBar
+            android:id="@+id/progress_bar_tvod"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_marginLeft="170dp"
+            android:layout_marginTop="100dp"
+            android:layout_marginBottom="16dp" />
+
+    </com.google.android.exoplayer2.ui.SimpleExoPlayerView>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="300dp"
+        android:layout_below="@+id/player_view_tvod">
+
+        <ListView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/listview_tvod">
+        </ListView>
+
+    </RelativeLayout>
+
+    <com.google.android.exoplayer2.ui.PlayerControlView android:id="@+id/cast_control_view_tvod"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="2"
+        android:visibility="gone"
+        app:repeat_toggle_modes="all|one"
+        app:show_timeout="-1"/>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

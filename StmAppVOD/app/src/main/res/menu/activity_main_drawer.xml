@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_vod"
+            android:icon="@drawable/ic_baseline_tv_24"
+            android:title="VOD Activity" />
+        <item
+            android:id="@+id/nav_tvod"
+            android:icon="@drawable/ic_baseline_tv_24"
+            android:title="TVOD Activity" />
+        <item
+            android:id="@+id/nav_live"
+            android:icon="@drawable/ic_baseline_live_tv_24"
+            android:title="Live Stream Activity" />
+<!--        <item-->
+<!--            android:id="@+id/nav_slideshow"-->
+<!--            android:icon="@drawable/ic_menu_slideshow"-->
+<!--            android:title="@string/menu_slideshow" />-->
+    </group>
+</menu>
