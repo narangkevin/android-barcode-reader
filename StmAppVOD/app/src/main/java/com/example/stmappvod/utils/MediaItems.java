@@ -7,7 +7,7 @@ import java.util.ArrayList;
 /**
  * Class representing local media metadata.
  */
-public class MediaItem {
+public class MediaItems {
 
     private String mTitle;
     private String mSubTitle;
@@ -107,19 +107,19 @@ public class MediaItem {
         return wrapper;
     }
 
-    public static final MediaItem fromBundle(Bundle wrapper) {
-        if (null == wrapper) {
-            return null;
-        }
-        MediaItem media = new MediaItem();
-        media.setUrl(wrapper.getString(KEY_URL));
-        media.setTitle(wrapper.getString(KEY_TITLE));
-        media.setSubTitle(wrapper.getString(KEY_SUBTITLE));
-        media.setStudio(wrapper.getString(KEY_STUDIO));
-        media.mImageList.addAll(wrapper.getStringArrayList(KEY_IMAGES));
-        media.setContentType(wrapper.getString(KEY_CONTENT_TYPE));
-        return media;
-    }
+//    public static final MediaItem fromBundle(Bundle wrapper) {
+//        if (null == wrapper) {
+//            return null;
+//        }
+//        MediaItem media = new MediaItem();
+//        media.setUrl(wrapper.getString(KEY_URL));
+//        media.setTitle(wrapper.getString(KEY_TITLE));
+//        media.setSubTitle(wrapper.getString(KEY_SUBTITLE));
+//        media.setStudio(wrapper.getString(KEY_STUDIO));
+//        media.mImageList.addAll(wrapper.getStringArrayList(KEY_IMAGES));
+//        media.setContentType(wrapper.getString(KEY_CONTENT_TYPE));
+//        return media;
+//    }
 
 
 }

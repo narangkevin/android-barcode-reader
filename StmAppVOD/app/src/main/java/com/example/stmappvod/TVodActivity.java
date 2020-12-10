@@ -10,10 +10,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.media.browse.MediaBrowser;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.support.v4.media.MediaBrowserCompat;
 import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
@@ -28,6 +30,9 @@ import android.widget.ProgressBar;
 import android.widget.SimpleAdapter;
 import android.widget.Toast;
 
+import com.google.android.exoplayer2.MediaItem;
+
+import com.example.stmappvod.utils.MediaItems;
 import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.DefaultRenderersFactory;
 import com.google.android.exoplayer2.ExoPlaybackException;
@@ -43,6 +48,7 @@ import com.google.android.exoplayer2.drm.FrameworkMediaCrypto;
 import com.google.android.exoplayer2.drm.HttpMediaDrmCallback;
 import com.google.android.exoplayer2.drm.MediaDrmCallback;
 import com.google.android.exoplayer2.drm.UnsupportedDrmException;
+import com.google.android.exoplayer2.ext.cast.CastPlayer;
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
 import com.google.android.exoplayer2.extractor.ExtractorsFactory;
 import com.google.android.exoplayer2.source.MediaSource;
@@ -66,8 +72,16 @@ import com.google.android.exoplayer2.upstream.HttpDataSource;
 import com.google.android.exoplayer2.upstream.cache.CacheDataSourceFactory;
 import com.google.android.exoplayer2.upstream.cache.NoOpCacheEvictor;
 import com.google.android.exoplayer2.upstream.cache.SimpleCache;
+import com.google.android.exoplayer2.util.MimeTypes;
 import com.google.android.exoplayer2.util.Util;
+import com.google.android.gms.cast.MediaInfo;
+import com.google.android.gms.cast.MediaMetadata;
+import com.google.android.gms.cast.MediaQueueItem;
 import com.google.android.gms.cast.framework.CastButtonFactory;
+import com.google.android.gms.cast.framework.CastContext;
+import com.google.android.gms.cast.framework.CastState;
+import com.google.android.gms.cast.framework.CastStateListener;
+import com.google.android.gms.common.images.WebImage;
 import com.google.android.material.navigation.NavigationView;
 
 import org.jetbrains.annotations.NotNull;
@@ -113,12 +127,10 @@ public class TVodActivity extends AppCompatActivity {
 
     private PlayerControlView castControlView;
     private MenuItem mediaRouteMenuItem;
-    private LiveStreamActivity.PlaybackLocation mLocation;
 
-    public enum PlaybackLocation {
-        LOCAL,
-        REMOTE
-    }
+    private CastContext castContext;
+
+    private LiveStreamActivity.PlaybackLocation mLocation;
 
     private String dashuseragent;
 
@@ -138,11 +150,6 @@ public class TVodActivity extends AppCompatActivity {
 
         btFullScreen = findViewById(R.id.bt_fullscreen);
         btExoPlay = findViewById(R.id.exo_play);
-
-        castControlView = findViewById(R.id.cast_control_view_tvod);
-
-        dashuseragent = Util.getUserAgent(getApplicationContext().getApplicationContext(), "Kevin User Agent");
-
 
         NavigationView navigationView = findViewById(R.id.nav_view_tvod);
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
@@ -164,6 +171,10 @@ public class TVodActivity extends AppCompatActivity {
                 return true;
             }
         });
+
+        // Add data for immediate testing
+        videoPlayer("https://cdn120.stm.trueid.net/live8/ht111_th_m_auto_tidapp.smil/manifest.mpd?appid=trueid&type=live&visitor=mobile&uid=000000001&did=MDAwMDAwMDAw",
+                "https://kd.stm.trueid.net/charybdis/drmdecrypt?appid=trueid&type=live&visitor=mobile&uid=000000001&did=MDAwMDAwMDAw&mpass=9WKhT4DrTtZACPMgYX4YZW86NAa2TJT9SDyHBvr94yk6On0kN67AvcAm4dI71PPU63k");
 
         coordinatorLayout = (CoordinatorLayout) findViewById(R.id.coordinator_layout);
         File tempFolder = getPrivateStorageDir(this ,"Movie_01");
@@ -248,13 +259,11 @@ public class TVodActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
         getMenuInflater().inflate(R.menu.browse, menu);
-        mediaRouteMenuItem = CastButtonFactory.setUpMediaRouteButton(getApplicationContext(), menu,
-                R.id.media_route_menu_item);
         return true;
     }
 
     // Using ID to get VOD URL
-    public void getStreamURL(String accessId){
+    public void getStreamURL(String accessId) {
         OkHttpClient client = new OkHttpClient();
         String url = "http://35.244.252.52/pk-streamer/v2/streamer?id="+ accessId +"&lang=&langid=th&fields=setting," +
                 "allow_chrome_cast,subscriptionoff_requirelogin,subscription_package,subscription_tiers," +
@@ -298,6 +307,7 @@ public class TVodActivity extends AppCompatActivity {
 
                                 url[0] = streamItem.get("stream_url").toString();
                                 license[0] = streamItem.get("stream_license").toString();
+//                                videoPlayer("https://cdn245.stm.trueid.net/live9/tmp002_tv_auto_ott.smil/manifest.mpd","https://kdlegacyqa.stm.trueid.net/charybdisl1/drmdecrypt?appid=trueid&type=live&visitor=web&uid=40893952&did=RGV2aWNlMDE&mpass=9WKhT4DrTtZACPMgYX4YZW86NAa2TJT9SDyHBvr94yk6On0kN67AvcAm4dI71PPU63k");
                                 videoPlayer(url[0], license[0]);
                             } catch (JSONException e) {
                                 e.printStackTrace();
@@ -351,197 +361,103 @@ public class TVodActivity extends AppCompatActivity {
     }
 
         public void videoPlayer(String url, String license) {
-//        //Make activity full screen
-//        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-//                WindowManager.LayoutParams.FLAG_FULLSCREEN);
-//
-//        //Video URL
-//        Uri videoUrl = Uri.parse(url);
-//
-//        // Initialize Load control
-//        LoadControl loadControl = new DefaultLoadControl();
-//        // Initialize band width meter
-//        BandwidthMeter bandwidthMeter = new DefaultBandwidthMeter();
-//        // Initialize track selector
-//        TrackSelector trackSelector = new DefaultTrackSelector(
-//                new AdaptiveTrackSelection.Factory(bandwidthMeter)
-//        );
-//        // Initialize simple exo player
-//        simpleExoPlayer = ExoPlayerFactory.newSimpleInstance(
-//                TVodActivity.this,trackSelector,loadControl
-//        );
-//        // Initialize Dada source factory
-//        DefaultHttpDataSourceFactory factory = new DefaultHttpDataSourceFactory("exoplayer_video");
-//        // Initialize extractors factory
-//        ExtractorsFactory extractorsFactory = new DefaultExtractorsFactory();
-//
-//        // Data Source Factory
-//        DefaultHttpDataSourceFactory dataSourceFactory = new DefaultHttpDataSourceFactory("exoplayer");
-//
-//        // Initialize Media Source
-//        Handler mainHandler = new Handler();
-//        MediaSource mediaSource = new HlsMediaSource(videoUrl, dataSourceFactory, mainHandler, null);
-//
-//        //Set Player
-//        playerView.setPlayer(simpleExoPlayer);
-//        //Keep screen on
-//        playerView.setKeepScreenOn(true);
-//        // Prepare media
-//        simpleExoPlayer.prepare(mediaSource);
-//        // Play video when ready
-//        simpleExoPlayer.setPlayWhenReady(true);
-//        simpleExoPlayer.addListener(new Player.EventListener() {
-//            @Override
-//            public void onTimelineChanged(Timeline timeline, java.lang.Object manifest, int reason) {
-//
-//            }
-//
-//            @Override
-//            public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
-//
-//            }
-//
-//            @Override
-//            public void onLoadingChanged(boolean isLoading) {
-//
-//            }
-//
-//            @Override
-//            public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-//                // Check condition
-//                if (playbackState == Player.STATE_BUFFERING){
-//                    progressBar.setVisibility(View.VISIBLE);
-//                } else if (playbackState == Player.STATE_READY) {
-//                    progressBar.setVisibility(View.GONE);
-//                }
-//            }
-//
-//            @Override
-//            public void onRepeatModeChanged(int repeatMode) {
-//
-//            }
-//
-//            @Override
-//            public void onShuffleModeEnabledChanged(boolean shuffleModeEnabled) {
-//
-//            }
-//
-//            @Override
-//            public void onPlayerError(ExoPlaybackException error) {
-//
-//            }
-//
-//            @Override
-//            public void onPositionDiscontinuity(int reason) {
-//
-//            }
-//
-//            @Override
-//            public void onPlaybackParametersChanged(PlaybackParameters playbackParameters) {
-//
-//            }
-//
-//            @Override
-//            public void onSeekProcessed() {
-//
-//            }
-//        });
-        try {
-            simpleExoPlayer = createPlayer(license);
-        } catch(UnsupportedDrmException e) {
-            Log.e("ERROR", "Create Player",e);
-        }
 
-        playerView.setPlayer(simpleExoPlayer);
-        Uri uri = Uri.parse(url);
-        DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(this, dashuseragent);
-        DashChunkSource.Factory dashChunkSource = new DefaultDashChunkSource.Factory(dataSourceFactory);
-        DashMediaSource mediaSource = new DashMediaSource.Factory(dashChunkSource,dataSourceFactory).createMediaSource(uri);
-        simpleExoPlayer.prepare(mediaSource);
-        simpleExoPlayer.setPlayWhenReady(true);
-        simpleExoPlayer.addListener(new Player.EventListener() {
-            @Override
-            public void onTimelineChanged(Timeline timeline, java.lang.Object manifest, int reason) {
-
+            try {
+                simpleExoPlayer = createPlayer(license);
+            } catch(UnsupportedDrmException e) {
+                Log.e("ERROR", "Create Player",e);
             }
 
-            @Override
-            public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
+            playerView.setPlayer(simpleExoPlayer);
+            Uri uri = Uri.parse(url);
+            DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(this, dashuseragent);
+            DashChunkSource.Factory dashChunkSource = new DefaultDashChunkSource.Factory(dataSourceFactory);
+            DashMediaSource mediaSource = new DashMediaSource.Factory(dashChunkSource,dataSourceFactory).createMediaSource(uri);
+            simpleExoPlayer.prepare(mediaSource);
+            simpleExoPlayer.setPlayWhenReady(true);
+            simpleExoPlayer.addListener(new Player.EventListener() {
+                @Override
+                public void onTimelineChanged(Timeline timeline, java.lang.Object manifest, int reason) {
 
-            }
-
-            @Override
-            public void onLoadingChanged(boolean isLoading) {
-
-            }
-
-            @Override
-            public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-                // Check condition
-                if (playbackState == Player.STATE_BUFFERING){
-                    progressBar.setVisibility(View.VISIBLE);
-                } else if (playbackState == Player.STATE_READY) {
-                    progressBar.setVisibility(View.GONE);
                 }
-            }
 
-            @Override
-            public void onRepeatModeChanged(int repeatMode) {
+                @Override
+                public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
 
-            }
-
-            @Override
-            public void onShuffleModeEnabledChanged(boolean shuffleModeEnabled) {
-
-            }
-
-            @Override
-            public void onPlayerError(ExoPlaybackException error) {
-
-            }
-
-            @Override
-            public void onPositionDiscontinuity(int reason) {
-
-            }
-
-            @Override
-            public void onPlaybackParametersChanged(PlaybackParameters playbackParameters) {
-
-            }
-
-            @Override
-            public void onSeekProcessed() {
-
-            }
-        });
-
-        btFullScreen.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (flag) {
-                    btFullScreen.setImageDrawable(getResources().getDrawable(R.drawable.ic_fullscreen));
-
-                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-
-                    flag = false;
-                } else {
-                    btFullScreen.setImageDrawable(getResources().getDrawable(R.drawable.ic_fullscreen_exit));
-
-                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-
-                    flag = true;
                 }
-            }
-        });
 
-        btExoPlay.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-//                simpleExoPlayer.stop();
-                simpleExoPlayer.setPlayWhenReady(true);
-            }
-        });
+                @Override
+                public void onLoadingChanged(boolean isLoading) {
+
+                }
+
+                @Override
+                public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
+                    // Check condition
+                    if (playbackState == Player.STATE_BUFFERING){
+                        progressBar.setVisibility(View.VISIBLE);
+                    } else if (playbackState == Player.STATE_READY) {
+                        progressBar.setVisibility(View.GONE);
+                    }
+                }
+
+                @Override
+                public void onRepeatModeChanged(int repeatMode) {
+
+                }
+
+                @Override
+                public void onShuffleModeEnabledChanged(boolean shuffleModeEnabled) {
+
+                }
+
+                @Override
+                public void onPlayerError(ExoPlaybackException error) {
+
+                }
+
+                @Override
+                public void onPositionDiscontinuity(int reason) {
+
+                }
+
+                @Override
+                public void onPlaybackParametersChanged(PlaybackParameters playbackParameters) {
+
+                }
+
+                @Override
+                public void onSeekProcessed() {
+
+                }
+            });
+
+            btFullScreen.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (flag) {
+                        btFullScreen.setImageDrawable(getResources().getDrawable(R.drawable.ic_fullscreen));
+
+                        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
+                        flag = false;
+                    } else {
+                        btFullScreen.setImageDrawable(getResources().getDrawable(R.drawable.ic_fullscreen_exit));
+
+                        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+
+                        flag = true;
+                    }
+                }
+            });
+
+            btExoPlay.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+    //                simpleExoPlayer.stop();
+                    simpleExoPlayer.setPlayWhenReady(true);
+                }
+            });
     }
 
     private File getPrivateStorageDir(Context context, String folderName){

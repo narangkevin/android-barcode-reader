@@ -1,49 +1,41 @@
 package com.example.stmappvod;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
-import android.graphics.Point;
 import android.media.browse.MediaBrowser;
-import android.media.session.PlaybackState;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v4.media.MediaBrowserCompat;
-import android.text.method.ScrollingMovementMethod;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.AdapterView;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.SimpleAdapter;
-import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.VideoView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
-import androidx.core.view.ViewCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
-import com.android.volley.toolbox.NetworkImageView;
+import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.LoadControl;
+import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
+import com.google.android.exoplayer2.ext.cast.CastPlayer;
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
 import com.google.android.exoplayer2.extractor.ExtractorsFactory;
 import com.google.android.exoplayer2.source.MediaSource;
@@ -58,15 +50,16 @@ import com.google.android.exoplayer2.ui.PlayerView;
 import com.google.android.exoplayer2.upstream.BandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
+import com.google.android.exoplayer2.util.Log;
+import com.google.android.exoplayer2.util.MimeTypes;
 import com.google.android.gms.cast.MediaInfo;
-import com.google.android.gms.cast.MediaLoadRequestData;
 import com.google.android.gms.cast.MediaMetadata;
+import com.google.android.gms.cast.MediaQueueItem;
 import com.google.android.gms.cast.framework.CastButtonFactory;
 import com.google.android.gms.cast.framework.CastContext;
 import com.google.android.gms.cast.framework.CastSession;
 import com.google.android.gms.cast.framework.IntroductoryOverlay;
 import com.google.android.gms.cast.framework.SessionManagerListener;
-import com.google.android.gms.cast.framework.media.RemoteMediaClient;
 import com.google.android.gms.common.images.WebImage;
 import com.google.android.material.navigation.NavigationView;
 
@@ -78,8 +71,8 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Timer;
-import java.util.TimerTask;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -87,7 +80,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class LiveStreamActivity extends AppCompatActivity {
+public class LiveStreamActivity extends AppCompatActivity{
 
     String myResponse;
     ListView listView;
@@ -107,13 +100,15 @@ public class LiveStreamActivity extends AppCompatActivity {
 
     private PlayerControlView castControlView;
     private CastContext castContext;
+    private CastPlayer castPlayer;
+    private Player currentPlayer;
+    private int currentItemIndex;
+    private ArrayList<MediaItem> mediaQueue;
 
     private MenuItem mediaRouteMenuItem;
     private IntroductoryOverlay mIntroductoryOverlay;
     private PlaybackLocation mLocation;
     private PlaybackState mPlaybackState;
-
-    private CastContext mCastContext;
 
     private MediaBrowser.MediaItem mSelectedMedia;
     private final Handler mHandler = new Handler();
@@ -126,19 +121,16 @@ public class LiveStreamActivity extends AppCompatActivity {
         REMOTE
     }
 
-    private CastSession mCastSession;
-    private SessionManagerListener<CastSession> mSessionManagerListener;
-
-    // Cast Session Managements
-
-    // Back to Normal...
+    public enum PlaybackState {
+        PLAYING, PAUSED, BUFFERING, IDLE
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.nav_activity_livestm);
 
-        arrayList=new ArrayList<>();
+        arrayList = new ArrayList<>();
         listView = (ListView)findViewById(R.id.listview);
 
         playerView = findViewById(R.id.player_view_live);
@@ -146,62 +138,6 @@ public class LiveStreamActivity extends AppCompatActivity {
 
         btFullScreen = findViewById(R.id.bt_fullscreen);
         btExoPlay = findViewById(R.id.exo_play);
-
-        castControlView = findViewById(R.id.cast_control_view_live);
-
-        mCastContext = CastContext.getSharedInstance(this);
-
-        // Cast Session Management
-        private void setupCastListener() {
-            mSessionManagerListener = new SessionManagerListener<CastSession>() {
-                @Override
-                public void onSessionStarting(CastSession castSession) {
-
-                }
-
-                @Override
-                public void onSessionStarted(CastSession castSession, String s) {
-
-                }
-
-                @Override
-                public void onSessionStartFailed(CastSession castSession, int i) {
-
-                }
-
-                @Override
-                public void onSessionEnding(CastSession castSession) {
-
-                }
-
-                @Override
-                public void onSessionEnded(CastSession castSession, int i) {
-
-                }
-
-                @Override
-                public void onSessionResuming(CastSession castSession, String s) {
-
-                }
-
-                @Override
-                public void onSessionResumed(CastSession castSession, boolean b) {
-
-                }
-
-                @Override
-                public void onSessionResumeFailed(CastSession castSession, int i) {
-
-                }
-
-                @Override
-                public void onSessionSuspended(CastSession castSession, int i) {
-
-                }
-            };
-        }
-
-        // End of Cast Session Management
 
         NavigationView navigationView = findViewById(R.id.nav_view_live);
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
@@ -310,35 +246,7 @@ public class LiveStreamActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
         getMenuInflater().inflate(R.menu.browse, menu);
-        mediaRouteMenuItem = CastButtonFactory.setUpMediaRouteButton(getApplicationContext(), menu,
-                R.id.media_route_menu_item);
         return true;
-    }
-
-    private void showIntroductoryOverlay() {
-        if (mIntroductoryOverlay != null) {
-            mIntroductoryOverlay.remove();
-        }
-        if ((mediaRouteMenuItem != null) && mediaRouteMenuItem.isVisible()) {
-            new Handler().post(new Runnable() {
-                @Override
-                public void run() {
-                    mIntroductoryOverlay = new IntroductoryOverlay.Builder(
-                            LiveStreamActivity.this, mediaRouteMenuItem)
-                            .setTitleText("Introducing Cast")
-                            .setSingleTime()
-                            .setOnOverlayDismissedListener(
-                                    new IntroductoryOverlay.OnOverlayDismissedListener() {
-                                        @Override
-                                        public void onOverlayDismissed() {
-                                            mIntroductoryOverlay = null;
-                                        }
-                                    })
-                            .build();
-                    mIntroductoryOverlay.show();
-                }
-            });
-        }
     }
 
     public void getStreamURL(String accessId) {
@@ -429,6 +337,7 @@ public class LiveStreamActivity extends AppCompatActivity {
 
         //Video URL
         Uri videoUrl = Uri.parse(url);
+//        Uri videoUrl = Uri.parse("https://cdn087.stm.trueid.net/live6/ht111_th_m_auto_all.smil/playlist.m3u8?appid=stmnkd&type=live&visitor=mobile&uid=22928975&mpass=INTHEWORLDOFSTREAMING");
 
         // Initialize Load control
         LoadControl loadControl = new DefaultLoadControl();
@@ -449,10 +358,29 @@ public class LiveStreamActivity extends AppCompatActivity {
         // Initialize extractors factory
         ExtractorsFactory extractorsFactory = new DefaultExtractorsFactory();
 
+        // Call Custom Header Encryption
+        String tempHeader = "";
+        try {
+            String timestamp = Long.toString(System.currentTimeMillis() / 1000L);
+            String deviceID = "deviceid99999";
+            String messageStr = timestamp + "-" + deviceID;
+            StmAppPlayerAuthen stmAppPlayerAuthen = new StmAppPlayerAuthen();
+            String encrypted = stmAppPlayerAuthen.encrypt(messageStr);
+            tempHeader = encrypted;
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+        System.out.println("My Custom Header Encrypted ---> " + tempHeader);
+        Log.i("Custom Header", tempHeader);
+
         // Data Source Factory
         DefaultHttpDataSourceFactory dataSourceFactory = new DefaultHttpDataSourceFactory("exoplayer");
 
+        // Adding Custom Header to factory
+        dataSourceFactory.setDefaultRequestProperty("PlayerAuthen", tempHeader);
+
         MediaSource mediaSource = new HlsMediaSource(videoUrl, dataSourceFactory, null, null);
+
 
         //Set Player
         playerView.setPlayer(simpleExoPlayer);

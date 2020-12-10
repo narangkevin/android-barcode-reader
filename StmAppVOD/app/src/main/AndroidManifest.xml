@@ -28,8 +28,7 @@
 
         <meta-data
             android:name="com.google.android.gms.cast.framework.OPTIONS_PROVIDER_CLASS_NAME"
-            android:value="com.example.stmappvod.CastOptionsProvider" />
-
+            android:value="com.example.stmappvod.CastOptionsProvider"/>
     </application>
 
 </manifest>

@@ -35,7 +35,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/listview">
-
     </ListView>
 
     <com.google.android.exoplayer2.ui.PlayerControlView android:id="@+id/cast_control_view_svod"
