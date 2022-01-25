@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <EditText
+        android:id="@+id/urlInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:layout_margin="10dp"
+        android:hint="Enter URL"
+        >
+    </EditText>
+    <EditText
+        android:id="@+id/licenseInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:layout_below="@+id/urlInput"
+        android:inputType="textPersonName"
+        android:layout_margin="10dp"
+        android:hint="Enter License URL"
+        >
+    </EditText>
+
+    <com.google.android.exoplayer2.ui.PlayerView
+        android:id="@+id/video_view"
+        android:layout_width="match_parent"
+        android:layout_below="@id/licenseInput"
+        android:layout_height="300dp">
+
+    </com.google.android.exoplayer2.ui.PlayerView>
+
+    <LinearLayout
+        android:id="@+id/liner_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_below="@id/video_view">
+
+        <Button
+            android:id="@+id/play_btn"
+            android:layout_width="108dp"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/licenseInput"
+            android:layout_margin="5dp"
+            android:text="Play" />
+
+        <Button
+            android:id="@+id/stop_btn"
+            android:layout_width="105dp"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/licenseInput"
+            android:layout_margin="5dp"
+            android:text="Stop" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/error_logs"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/liner_layout"
+        android:text="..."
+        android:padding="10dp"
+        android:scrollbars="vertical"
+        />
+
+</RelativeLayout>

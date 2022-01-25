@@ -330,7 +330,7 @@ public class LiveStreamActivity extends AppCompatActivity{
     /*... Class Media source under here */
 
     // Setting up Video Player
-    public void videoPlayer(String url){
+    public void videoPlayer(String url) {
         //Make activity full screen
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
