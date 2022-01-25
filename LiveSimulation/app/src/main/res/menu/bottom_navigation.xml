@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/nav_live"
+        android:icon="@drawable/ic_baseline_live_tv_24"
+        android:title="Live"/>
+
+    <item
+        android:id="@+id/nav_VOD"
+        android:icon="@drawable/ic_baseline_tv_24"
+        android:title="TVOD"/>
+
+    <item
+        android:id="@+id/nav_SVOD"
+        android:icon="@drawable/ic_baseline_subscriptions_24"
+        android:title="SVOD"/>
+
+</menu>
