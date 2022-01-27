@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "229079909058",
+    "firebase_url": "https://android-barcode-reader-f52d3-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "android-barcode-reader-f52d3",
+    "storage_bucket": "android-barcode-reader-f52d3.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:229079909058:android:e7039a07cff5322f46315b",
+        "android_client_info": {
+          "package_name": "com.example.barcodereader"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "229079909058-579pq0i4apn49947n297m9e0a4k13568.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDo4p7OCL-LopqtgXl4w70Ru523DNWupLE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "229079909058-579pq0i4apn49947n297m9e0a4k13568.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

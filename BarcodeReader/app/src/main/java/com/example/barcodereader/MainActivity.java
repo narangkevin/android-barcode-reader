@@ -12,18 +12,31 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener{
+public class MainActivity extends AppCompatActivity {
 
     Button scan_btn;
+    Button export_btn;
     ArrayList<String> codeList;
+    String[][] exportList;
     RecyclerView mRecyclerView;
     RecyclerView.LayoutManager mLayoutManager;
     RecyclerView.Adapter mAdapter;
+
+    FirebaseDatabase rootNode;
+    DatabaseReference dbReference;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,14 +46,47 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
 
         scan_btn = findViewById(R.id.scan_btn);
-        scan_btn.setOnClickListener(this);
+        export_btn = findViewById(R.id.export_btn);
 
         codeList = new ArrayList<>();
+
+        scan_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                scanCode();
+            }
+        });
+
+        export_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                System.out.println("Code List ----> "+codeList);
+
+                countFrequency(codeList);
+            }
+        });
     }
 
-    @Override
-    public void onClick(View view) {
-        scanCode();
+    public void countFrequency(ArrayList<String> list){
+        rootNode = FirebaseDatabase.getInstance();
+        dbReference = rootNode.getReference("codes");
+
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd--HH:mm:ss");
+        LocalDateTime now = LocalDateTime.now();
+        System.out.println("DATE & TIME ---> "+dtf.format(now));
+
+        int qty;
+
+        for (int i = 0; i < list.size(); i++){
+            qty = Collections.frequency(list, list.get(i));
+            dbReference.child(dtf.format(now)).child(list.get(i)).child("quantity").setValue(qty);
+        }
+
+        Set<String> st = new HashSet<String>(list);
+        for (String s : st)
+            System.out.println(s + ": " + Collections.frequency(list, s));
+
+        mRecyclerView.setAdapter(null);
     }
 
     private void scanCode() {
