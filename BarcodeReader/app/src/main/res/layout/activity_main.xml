@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="10dp"
+        android:layout_above="@+id/export_btn"
+        />
+
+    <Button
+        android:id="@+id/export_btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Export List"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_above="@+id/scan_btn"
+        >
+
+    </Button>
+
+    <Button
+        android:id="@+id/scan_btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Scan Barcode"
+        android:layout_margin="10dp"
+        android:layout_alignParentBottom="true"
+        >
+
+    </Button>
+
+</RelativeLayout>
